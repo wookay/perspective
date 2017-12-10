@@ -1,0 +1,7 @@
+_site
+_site/assets
+_site/index.html
+_site/README.md
+Gemfile
+Gemfile.lock
+*.map
