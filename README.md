@@ -14,7 +14,7 @@ Perspective features:
 
 - Runtimes for single process, Web Worker and Node.js
 
-Try out in interactive [demo](demo.html), or keep reading to learn how to use
+Try out in interactive [demo](examples/superstore.html), or keep reading to learn how to use
 Perspective in your own project.
 
 ## Installation
