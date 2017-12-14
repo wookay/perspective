@@ -1,28 +1,44 @@
 # Perspective
 
-A streaming data pivot, aggregation and filter engine for Javascript and C++.
-Perspective features:
+A streaming data visualization engine for Javascript, Perspective makes it simple to build real-time 
+& user configurable analytics entirely in the browser.
 
-- A fast, memory efficient implementation written principally in C++ and
-  compiled to both WebAssmebly and asm.js via the
+Features:
+
+- A fast, memory efficient streaming data engine written principally in C++ and
+  compiled to both WebAssembly and asm.js via the
   [emscripten](https://github.com/kripken/emscripten) compiler.
 
-- A Web Component based, embeddable UI for user engine configuration, as well as 
-  simple visualization plugins for some common Javascript libraries such as
+- An embeddable, framework-agnostic UI for user engine configuration & visualization, based
+  on [Web Components](https://www.webcomponents.org/), and a WebWorker engine host for
+  responsive UIs no matter the update frequency.
+
+- A suite of simple visualization plugins for some common Javascript libraries such as
   [HighCharts](https://github.com/highcharts/highcharts) and 
   [Hypergrid](https://github.com/fin-hypergrid/core).
 
-- Runtimes for single process, Web Worker and Node.js
+- Runtimes for the Browser and Node.js.
 
-Try out in interactive [demo](examples/superstore.html), or keep reading to learn how to use
-Perspective in your own project.
+## Examples
+
+* [superstore.html](https://jpmorganchase.github.io/perspective/examples/superstore.html) A static `superstore.csv` demo page.
+* [citibike.html](https://jpmorganchase.github.io/perspective/examples/citibike.html) NYC Citibike availability map.
+* [streaming.html](https://jpmorganchase.github.io/perspective/examples/streaming.html) A streaming random data demo page.
+* [coincap.html](https://jpmorganchase.github.io/perspective/examples/coincap.html) Streaming cryptocurrency prices via [Coincap.io](http://coincap.io/).
+* [test.html](https://jpmorganchase.github.io/perspective/examples/test.html) The test suite.
+* [benchmark.html](https://jpmorganchase.github.io/perspective/examples/benchmark.html) Some simple in-browser benchmarks.
 
 ## Installation
 
 ### From source
 
 You'll need [emscripten](https://github.com/kripken/emscripten) installed and 
-resolveable on your PATH (via the `emsdk_env.sh`) in order to build from source.
+resolveable on your PATH in order to build from source, for example via `emsdk_env.sh`:
+
+```bash
+source emsdk/emsdk_env.sh
+```
+
 Once installed, you can build perspective via:
 
 ```bash
@@ -33,11 +49,6 @@ npm install
 
 If everything is successful, you should find a few built example assets in the 
 `packages/perspective-examples/build` directory:
-
-* [superstore.html](examples/superstore.html) A static `superstore.csv` demo page.
-* [streaming.html](examples/streaming.html) A streaming random data demo page.
-* [test.html](examples/test.html) The test suite.
-* [benchmark.html](examples/benchmark.html) Some simple in-browser benchmarks.
 
 You can run a simple test server on port 8081 by running:
 
@@ -114,14 +125,20 @@ or in a Web Worker (browser only)
 
 #### In the browser
 
+Via ES6 module and/or Babel:
+
 ```javascript
 import perspective from 'perspective';
 ```
+
 or
 
 ```javascript
 const perpective = require('perpective');
 ```
+
+Perspective can also be referenced via the global `perspective` module name in vanilla
+Javascript.
 
 Once imported, you'll need to instance a `perspective` engine via the `worker()` 
 method.  This will create a new WebWorker (browser) or Process (node.js), and 
@@ -134,6 +151,12 @@ const worker = perspective.worker();
 
 #### In Node.js
 
+```javascript
+const perspective = require('perspective/build/perspective.node.js');
+```
+
+See [perspective-examples/node_server.js](https://github.com/jpmorganchase/perspective/blob/master/packages/perspective-examples/src/js/node_server.js)
+for an example.
 
 #### Usage
 
@@ -235,5 +258,4 @@ document.addEventListener("WebComponentsReady", function () {
 });
 ```
 
-<perspective-viewer data='[{"x": 1, "y":"a", "z": true},{"x": 2, "y":"b", "z": false},{"x": 3, "y":"c", "z": true},{"x": 4, "y":"d", "z": false}]'></perspective-viewer>
-
+See [API Docs](https://github.com/jpmorganchase/perspective/tree/master/packages/perspective]) for more details.

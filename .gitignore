@@ -5,3 +5,5 @@ _site/README.md
 Gemfile
 Gemfile.lock
 *.map
+node_modules
+packages

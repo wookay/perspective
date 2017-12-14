@@ -17548,13 +17548,8 @@ var __MODULE__ = void 0;
 
 /**
  * Infer the t_dtype of a value.
- *
- * Params
- * ------
- *
- * Returns
- * -------
- * A t_dtype.
+ * @private
+ * @returns A t_dtype.
  */
 function infer_type(x) {
     var t = __MODULE__.t_dtype.DTYPE_FLOAT64;
@@ -17587,17 +17582,14 @@ var DATE_PARSE_CANDIDATES = [_moment2.default.ISO_8601, _moment2.default.RFC_282
 
 /**
  * Do any necessary data transforms on columns. Currently it does the following
- *  transforms
- *  1. Date objects are converted into float millis since epoch
+ * transforms
+ * 1. Date objects are converted into float millis since epoch
+ * 
+ * @private
+ * @param {string} type type of column
+ * @param {array} data array of columnar data
  *
- *  Params
- *  -------
- *  type: type of column
- *  data: array of columnar data
- *
- *  Returns
- *  -------
- *  transformed array of columnar data
+ * @returns transformed array of columnar data
  */
 function transform_data(type, data) {
     if (type != __MODULE__.t_dtype.DTYPE_TIME) {
@@ -17615,14 +17607,9 @@ function transform_data(type, data) {
  * Converts any supported input type into a canonical representation for
  * interfacing with perspective.
  *
- * Params
- * ------
- * data : <supported data types>
- *     See docs
- *
- * Returns
- * -------
- * An object with 3 properties:
+ * @private
+ * @param {object} data See docs
+ * @returns An object with 3 properties:
  *    names - the column names.
  *    types - the column t_dtypes.
  *    cdata - an array of columnar data.
@@ -17800,12 +17787,22 @@ function parse_data(data, names, types) {
  */
 
 /**
- * A user-facing constructor wrapping a perspective context, representing a
- * view (configuration or pivot, filter, sort, etc) on the underlying data.
+ * A View object represents a specific transform (configuration or pivot, 
+ * filter, sort, etc) configuration on an underlying {@link table}. A View
+ * receives all updates from the {@link table} from which it is derived, and
+ * can be serialized to JSON or trigger a callback when it is updated.  View 
+ * objects are immutable, and will remain in memory and actively process 
+ * updates until its {@link view#delete} method is called.
  *
- * Params
- * ------
+ * <strong>Note</strong> This constructor is not public - Views are created
+ * by invoking the {@link table#view} method. 
+ * 
+ * @example
+ * // Returns a new View, pivoted in the row space by the "name" column.
+ * table.view({row_pivots: ["name"]});
  *
+ * @class
+ * @hideconstructor
  */
 function view(pool, ctx, gnode, config, id, name, callbacks) {
     this.ctx = ctx;
@@ -17817,6 +17814,11 @@ function view(pool, ctx, gnode, config, id, name, callbacks) {
     this.name = name;
 }
 
+/**
+ * Delete this {@link view} and clean up all resources associated with it.
+ * View objects do not stop consuming resources or processing updates when
+ * they are garbage collected - you must call this method to reclaim these.
+ */
 view.prototype.delete = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee() {
     var i, j, val;
     return _regenerator2.default.wrap(function _callee$(_context) {
@@ -17846,9 +17848,9 @@ view.prototype.delete = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerat
 /**
  * How many pivoted sides does this view have?
  *
- * Returns
- * -------
- * 0, 1 or 2, depending on the context.
+ * @private
+ *
+ * @returns {number} sides The number of sides of this `View`.
  */
 view.prototype.sides = function () {
     var name = void 0;
@@ -17892,11 +17894,15 @@ view.prototype._column_names = function () {
 };
 
 /**
- * Returns the schema of this view.
+ * The schema of this {@link view}.  A schema is an Object, the keys of which
+ * are the columns of this {@link view}, and the values are their string type names.
+ * If this {@link view} is aggregated, theses will be the aggregated types;
+ * otherwise these types will be the same as the columns in the underlying 
+ * {@link table}
  *
- * Returns
- * -------
- * schema of the view.
+ * @async
+ *
+ * @returns {Promise<Object>} A Promise of this {@link view}'s schema.
  */
 view.prototype.schema = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2() {
     var schema, _types, names, types, i, new_schema, col_names, key, col_name, agg;
@@ -17956,12 +17962,25 @@ view.prototype.schema = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerat
 /**
  * Serializes this view to JSON data in a standard format.
  *
- * Params
- * ------
+ * @async
  *
- * Returns
- * -------
- * A Javascript object representation of this view.
+ * @param {Object} [options] An optional configuration object.
+ * @param {number} options.start_row The starting row index from which
+ * to serialize.
+ * @param {number} options.end_row The ending row index from which
+ * to serialize.
+ * @param {number} options.start_col The starting column index from which
+ * to serialize.
+ * @param {number} options.end_col The ending column index from which
+ * to serialize. 
+ * 
+ * @returns {Promise<Array>} A Promise resolving to An array of Objects 
+ * representing the rows of this {@link view}.  If this {@link view} had a
+ * "row_pivots" config parameter supplied when constructed, each row Object
+ * will have a "__ROW_PATH__" key, whose value specifies this row's 
+ * aggregated path.  If this {@link view} had a "column_pivots" config
+ * parameter supplied, the keys of this object will be comma-prepended with
+ * their comma-separated column paths.
  */
 view.prototype.to_json = function () {
     var _ref4 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee3(options) {
@@ -18054,11 +18073,13 @@ view.prototype.to_json = function () {
 }();
 
 /**
- * Serializes this view to JSON data in a standard format.
+ * The number of aggregated rows in this {@link view}.  This is affected by
+ * the "row_pivots" configuration parameter supplied to this {@link view}'s
+ * contructor.
  *
- * Returns
- * -------
- * A Javascript object representation of this view.
+ * @async
+ *
+ * @returns {Promise<number>} The number of aggregated rows.
  */
 view.prototype.num_rows = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee4() {
     return _regenerator2.default.wrap(function _callee4$(_context4) {
@@ -18076,11 +18097,13 @@ view.prototype.num_rows = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regener
 }));
 
 /**
- * Serializes this view to JSON data in a standard format.
+ * The number of aggregated columns in this {@link view}.  This is affected by
+ * the "column_pivots" configuration parameter supplied to this {@link view}'s
+ * contructor.
  *
- * Returns
- * -------
- * A Javascript object representation of this view.
+ * @async
+ *
+ * @returns {Promise<number>} The number of aggregated columns.
  */
 view.prototype.num_columns = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee5() {
     return _regenerator2.default.wrap(function _callee5$(_context5) {
@@ -18098,48 +18121,14 @@ view.prototype.num_columns = (0, _asyncToGenerator3.default)( /*#__PURE__*/_rege
 }));
 
 /**
- * Serializes this view to CSV.
+ * Register a callback with this {@link view}.  Whenever the {@link view}'s
+ * underlying table emits an update, this callback will be invoked with the
+ * aggregated row deltas.
  *
- * Returns
- * -------
- * A CSV representation of this view.
+ * @param {function} callback A callback function invoked on update.  The 
+ * parameter to this callback shares a structure with the return type of 
+ * {@link view#to_json}.
  */
-view.prototype.to_csv = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee6() {
-    return _regenerator2.default.wrap(function _callee6$(_context6) {
-        while (1) {
-            switch (_context6.prev = _context6.next) {
-                case 0:
-                    throw "Not yet implemented";
-
-                case 1:
-                case "end":
-                    return _context6.stop();
-            }
-        }
-    }, _callee6, this);
-}));
-
-view.prototype.update_config = function () {
-    var _ref8 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee7(config) {
-        return _regenerator2.default.wrap(function _callee7$(_context7) {
-            while (1) {
-                switch (_context7.prev = _context7.next) {
-                    case 0:
-                        throw "Not yet implemented";
-
-                    case 1:
-                    case "end":
-                        return _context7.stop();
-                }
-            }
-        }, _callee7, this);
-    }));
-
-    return function (_x2) {
-        return _ref8.apply(this, arguments);
-    };
-}();
-
 view.prototype.on_update = function (_callback) {
     var _this = this;
 
@@ -18180,18 +18169,16 @@ view.prototype.on_update = function (_callback) {
  */
 
 /**
- * A data structure representing the accumulated data.
+ * A Table object is the basic data container in Perspective.  Tables are
+ * typed - they have an immutable set of column names, and a known type for
+ * each. 
+ * 
+ * <strong>Note</strong> This constructor is not public - Tables are created
+ * by invoking the {@link table} factory method, either on the perspective 
+ * module object, or an a {@link worker} instance. 
  *
- * Params
- * ------
- * id - the t_gnode id as returned by the t_pool
- * gnode -
- * pool -
- * index - The column name to treat as the index.
- *
- * Returns
- * -------
- * A `table` instance.
+ * @class
+ * @hideconstructor
  */
 function _table(id, gnode, pool, index, tindex) {
     this.gnode = gnode;
@@ -18211,6 +18198,11 @@ _table.prototype._update_callback = function () {
     }
 };
 
+/**
+ * Delete this {@link table} and clean up all resources associated with it.
+ * Table objects do not stop consuming resources or processing updates when
+ * they are garbage collected - you must call this method to reclaim these.
+ */
 _table.prototype.delete = function () {
     this.pool.unregister_gnode(this.gnode);
     this.pool.delete();
@@ -18218,59 +18210,99 @@ _table.prototype.delete = function () {
 };
 
 /**
- * Returns the # of rows in this table.
+ * The number of accumulated rows in this {@link table}.  This is affected by
+ * the "index" configuration parameter supplied to this {@link view}'s
+ * contructor - as rows will be overwritten when they share an idnex column.
  *
- * Returns
- * -------
- * # of rows in teh table.
+ * @async
+ *
+ * @returns {Promise<number>} The number of accumulated rows.
  */
-_table.prototype.size = function (handler) {
-    var s = this.gnode.get_table().size();
-    if (handler) {
-        handler(s);
-    } else {
-        return s;
-    }
-};
+_table.prototype.size = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee6() {
+    return _regenerator2.default.wrap(function _callee6$(_context6) {
+        while (1) {
+            switch (_context6.prev = _context6.next) {
+                case 0:
+                    return _context6.abrupt("return", this.gnode.get_table().size());
 
-/**
- * Returns the schema of this table.
- *
- * Returns
- * -------
- * schema of the table.
- */
-_table.prototype.schema = function (handler) {
-    var schema = this.gnode.get_tblschema();
-    var columns = schema.columns();
-    var types = schema.types();
-    var new_schema = {};
-    for (var key = 0; key < columns.size(); key++) {
-        if (types.get(key).value === 2) {
-            new_schema[columns.get(key)] = "integer";
-        } else if (types.get(key).value === 19) {
-            new_schema[columns.get(key)] = "string";
-        } else if (types.get(key).value === 9) {
-            new_schema[columns.get(key)] = "float";
-        } else if (types.get(key).value === 11) {
-            new_schema[columns.get(key)] = "boolean";
-        } else if (types.get(key).value === 12) {
-            new_schema[columns.get(key)] = "date";
+                case 1:
+                case "end":
+                    return _context6.stop();
+            }
         }
-    }
-    if (handler) {
-        handler(new_schema);
-    } else {
-        return new_schema;
-    }
-};
+    }, _callee6, this);
+}));
 
 /**
- * Returns the # of rows in this table.
+ * The schema of this {@link table}.  A schema is an Object, the keys of which
+ * are the columns of this {@link table}, and the values are their string type names.
  *
- * Returns
- * -------
- * # of rows in the table.
+ * @async
+ *
+ * @returns {Promise<Object>} A Promise of this {@link table}'s schema.
+ */
+_table.prototype.schema = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee7() {
+    var schema, columns, types, new_schema, key;
+    return _regenerator2.default.wrap(function _callee7$(_context7) {
+        while (1) {
+            switch (_context7.prev = _context7.next) {
+                case 0:
+                    schema = this.gnode.get_tblschema();
+                    columns = schema.columns();
+                    types = schema.types();
+                    new_schema = {};
+
+                    for (key = 0; key < columns.size(); key++) {
+                        if (types.get(key).value === 2) {
+                            new_schema[columns.get(key)] = "integer";
+                        } else if (types.get(key).value === 19) {
+                            new_schema[columns.get(key)] = "string";
+                        } else if (types.get(key).value === 9) {
+                            new_schema[columns.get(key)] = "float";
+                        } else if (types.get(key).value === 11) {
+                            new_schema[columns.get(key)] = "boolean";
+                        } else if (types.get(key).value === 12) {
+                            new_schema[columns.get(key)] = "date";
+                        }
+                    }
+                    return _context7.abrupt("return", new_schema);
+
+                case 6:
+                case "end":
+                    return _context7.stop();
+            }
+        }
+    }, _callee7, this);
+}));
+
+/**
+ * Create a new {@link view} from this table with a specified
+ * configuration.
+ *
+ * @param {Object} [config] The configuration object for this {@link view}.
+ * @param {Array<string>} [config.row_pivot] An array of column names 
+ * to use as {@link https://en.wikipedia.org/wiki/Pivot_table#Row_labels Row Pivots}.
+ * @param {Array<string>} [config.column_pivot] An array of column names 
+ * to use as {@link https://en.wikipedia.org/wiki/Pivot_table#Column_labels Column Pivots}.
+ * @param {Array<Object>} [config.aggregate] An Array of Aggregate configuration objects,
+ * each of which should provide an "name" and "op" property, repsresnting the string 
+ * aggregation type and associated column name, respectively.  Aggregates not provided
+ * will use their type defaults
+ * @param {Array<Array<string>>} [config.filter] An Array of Filter configurations to
+ * apply.  A filter configuration is an array of 3 elements:  A column name, 
+ * a supported filter comparison string (e.g. '===', '>'), and a value to compare.
+ * @param {Array<string>} [config.sort] An Array of column names by which to sort.
+ *
+ * @example
+ * var view = table.view({
+ *      row_pivot: ['region'],
+ *      aggregate: [{op: 'dominant', column:'region'}],
+ *      filter: [['client', 'contains', 'fred']],
+ *      sort: ['value']
+ * });
+ *
+ * @returns {view} A new {@link view} object for the supplied configuration,
+ * bound to this table
  */
 _table.prototype.view = function (config) {
     var _string_to_aggtype2;
@@ -18294,8 +18326,6 @@ _table.prototype.view = function (config) {
         "and": __MODULE__.t_filter_op.FILTER_OP_AND,
         "is nan": __MODULE__.t_filter_op.FILTER_OP_IS_NAN,
         "is not nan": __MODULE__.t_filter_op.FILTER_OP_IS_NOT_NAN
-        //"is valid": __MODULE__.t_filter_op.FILTER_OP_IS_VALID,
-        //"is not valid": __MODULE__.t_filter_op.FILTER_OP_IS_NOT_VALID
     };
 
     var _string_to_aggtype = (_string_to_aggtype2 = {
@@ -18317,7 +18347,6 @@ _table.prototype.view = function (config) {
         "dominant": __MODULE__.t_aggtype.AGGTYPE_DOMINANT,
         "first": __MODULE__.t_aggtype.AGGTYPE_FIRST,
         "last": __MODULE__.t_aggtype.AGGTYPE_LAST,
-        //"PY_AGG": __MODULE__.t_aggtype.AGGTYPE_PY_AGG,
         "and": __MODULE__.t_aggtype.AGGTYPE_AND,
         "or": __MODULE__.t_aggtype.AGGTYPE_OR
     }, (0, _defineProperty3.default)(_string_to_aggtype2, "last", __MODULE__.t_aggtype.AGGTYPE_LAST_VALUE), (0, _defineProperty3.default)(_string_to_aggtype2, "high", __MODULE__.t_aggtype.AGGTYPE_HIGH_WATER_MARK), (0, _defineProperty3.default)(_string_to_aggtype2, "low", __MODULE__.t_aggtype.AGGTYPE_LOW_WATER_MARK), (0, _defineProperty3.default)(_string_to_aggtype2, "sum abs", __MODULE__.t_aggtype.AGGTYPE_SUM_ABS), (0, _defineProperty3.default)(_string_to_aggtype2, "sum not null", __MODULE__.t_aggtype.AGGTYPE_SUM_NOT_NULL), (0, _defineProperty3.default)(_string_to_aggtype2, "mean by count", __MODULE__.t_aggtype.AGGTYPE_MEAN_BY_COUNT), (0, _defineProperty3.default)(_string_to_aggtype2, "identity", __MODULE__.t_aggtype.AGGTYPE_IDENTITY), (0, _defineProperty3.default)(_string_to_aggtype2, "distinct leaf", __MODULE__.t_aggtype.AGGTYPE_DISTINCT_LEAF), (0, _defineProperty3.default)(_string_to_aggtype2, "pct sum parent", __MODULE__.t_aggtype.AGGTYPE_PCT_SUM_PARENT), (0, _defineProperty3.default)(_string_to_aggtype2, "pct sum grand total", __MODULE__.t_aggtype.AGGTYPE_PCT_SUM_GRAND_TOTAL), _string_to_aggtype2);
@@ -18409,22 +18438,20 @@ _table.prototype.view = function (config) {
         }), sort);
         this.pool.register_context(this.id, name, __MODULE__.t_ctx_type.ZERO_SIDED_CONTEXT, context.$$.ptr);
     }
+
     return new view(this.pool, context, this.gnode, config, this.id, name, this.callbacks);
 };
 
 /**
- * Updates a `table`.
+ * Updates the rows of a {@link table}.  Updated rows are pushed down to any
+ * derived {@link view} objects.
  *
- * Params
- * ------
- * data : [{col: val, ..}, ..]
- *     Updates a table from the list of rows data.
- * data : {col: [ val, ..], ..}
- *     Updates a table from the columnar data.  Uses fill_vector on ArrayBuffers.
- * data : String
- *     Updates a table from CSV data.
- * options : {name: val, .. }
- *     See: `table.options`
+ * @param {Object<string, Array>|Array<Object>|string} data The input data 
+ * for this table.  The supported input types mirror the constructor options, minus
+ * the ability to pass a schema (Object<string, string>) as this table has. 
+ * already been constructed, thus its types are set in stone.
+ * 
+ * @see {@link table}
  */
 _table.prototype.update = function (data) {
     var _parse_data = parse_data(data, this.columns(), this.gnode.get_tblschema().types()),
@@ -18433,23 +18460,39 @@ _table.prototype.update = function (data) {
         cdata = _parse_data.cdata;
 
     this.initialized = true;
-    var tbl = __MODULE__.make_table(data.length || 0, names, types, cdata, this.size(), this.index, this.tindex);
+    var tbl = __MODULE__.make_table(data.length || 0, names, types, cdata, this.gnode.get_table().size(), this.index, this.tindex);
     __MODULE__.fill(this.id, tbl, this.gnode, this.pool);
     tbl.delete();
 };
 
-_table.prototype.columns = function (handler) {
-    var cols = this.gnode.get_tblschema().columns();
-    var names = [];
-    for (var cidx = 0; cidx < cols.size(); cidx++) {
-        names.push(cols.get(cidx));
-    }
-    if (handler) {
-        handler(names);
-    } else {
-        return names;
-    }
-};
+/**
+ * The column names of this table.
+ *
+ * @async
+ *
+ * @returns {Array<string>} An array of column names for this table.
+ */
+_table.prototype.columns = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee8() {
+    var cols, names, cidx;
+    return _regenerator2.default.wrap(function _callee8$(_context8) {
+        while (1) {
+            switch (_context8.prev = _context8.next) {
+                case 0:
+                    cols = this.gnode.get_tblschema().columns();
+                    names = [];
+
+                    for (cidx = 0; cidx < cols.size(); cidx++) {
+                        names.push(cols.get(cidx));
+                    }
+                    return _context8.abrupt("return", names);
+
+                case 4:
+                case "end":
+                    return _context8.stop();
+            }
+        }
+    }, _callee8, this);
+}));
 
 _table.prototype.execute = function (f) {
     f(this);
@@ -18522,12 +18565,23 @@ if (typeof self !== "undefined" && self.addEventListener) {
             case 'table_method':
                 {
                     var obj = _tables[msg.name];
-                    var data = obj[msg.method].apply(obj, msg.args);
-                    if (data) {
-                        self.postMessage({
-                            id: msg.id,
-                            data: data
-                        });
+                    var result = obj[msg.method].apply(obj, msg.args);
+                    if (result) {
+                        if (result.then) {
+                            result.then(function (data) {
+                                if (data) {
+                                    self.postMessage({
+                                        id: msg.id,
+                                        data: data
+                                    });
+                                }
+                            });
+                        } else {
+                            self.postMessage({
+                                id: msg.id,
+                                data: result
+                            });
+                        }
                     }
                     break;
                 }
@@ -18563,26 +18617,32 @@ if (typeof self !== "undefined" && self.addEventListener) {
 
 var perspective = {
 
+    worker: function worker() {},
+
     /**
-     * Creates a new `table`.
+     * A factory method for constructing {@link table}s.  
+     * 
+     * @example
+     * // Creating a table directly from node
+     * var table = perspective.table([{x: 1}, {x: 2}]);
      *
-     * Params
-     * ------
-     * data : [{col: val, ..}, ..]
-     *     Create a populated table from the list of rows data.
-     * data : {col: [ val, ..], ..}
-     *     Create a populated table from the columnar data.  Uses fill_vector on ArrayBuffers.
-     * data : {col: type, ..}
-     *     Create an empty table with the supplied schema.
-     * data : String
-     *     Create a new table from CSV data.
-     * options : {name: val, .. }
-     *     Valid options are:
-     *       * index - column name of the data set to use as the index.
+     * @example
+     * // Creating a table from a Web Worker (instantiated via the worker() method).
+     * var table = worker.table([{x: 1}, {x: 2}]);
      *
-     * Returns
-     * -------
-     * A `table`.
+     * @param {Object<string, Array>|Object<string, string>|Array<Object>|string} data The input data 
+     *     for this table.  When supplied an Object with string values, an empty 
+     *     table is returned using this Object as a schema.  When an Object with 
+     *     Array values is supplied, a table is returned using this object's 
+     *     key/value pairs as name/columns respectively.  When an Array is supplied,
+     *     a table is constructed using this Array's objects as rows.  When 
+     *     a string is supplied, the parameter as parsed as a CSV.
+     * @param {Object} [options] An optional options dictionary.
+     * @param {string} options.index The name of the column in the resulting
+     *     table to treat as an index.  When updating this table, rows sharing anb
+     *     index of a new row will be overwritten.
+     *
+     * @returns {table} A new {@link table} object.
      */
     table: function table(data, options) {
         options = options || {};
