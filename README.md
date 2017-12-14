@@ -258,4 +258,4 @@ document.addEventListener("WebComponentsReady", function () {
 });
 ```
 
-See [API Docs](https://github.com/jpmorganchase/perspective/tree/master/packages/perspective]) for more details.
+See [API Docs](https://github.com/jpmorganchase/perspective/blob/master/packages/perspective/README.md) for more details.
