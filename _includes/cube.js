@@ -123,10 +123,10 @@ window.addEventListener('WebComponentsReady', function () {
     for (var x = 0; x < 100; x ++) {
         data.push(newRow());
     }
-    worker = perspective.worker();
+    var elems = Array.prototype.slice.call(document.querySelectorAll('#container perspective-viewer'));
+    worker = elems[0].worker;
 
     tbl = worker.table(data, {index: "id"});
-    var elems = Array.prototype.slice.call(document.querySelectorAll('#container perspective-viewer'));
     for (var x in elems) {
         if (elems.hasOwnProperty(x)) {
             var elem = elems[x];

@@ -25,8 +25,6 @@ Features:
 * [citibike.html](https://jpmorganchase.github.io/perspective/examples/citibike.html) NYC Citibike availability map.
 * [streaming.html](https://jpmorganchase.github.io/perspective/examples/streaming.html) A streaming random data demo page.
 * [coincap.html](https://jpmorganchase.github.io/perspective/examples/coincap.html) Streaming cryptocurrency prices via [Coincap.io](http://coincap.io/).
-* [test.html](https://jpmorganchase.github.io/perspective/examples/test.html) The test suite.
-* [benchmark.html](https://jpmorganchase.github.io/perspective/examples/benchmark.html) Some simple in-browser benchmarks.
 
 ## Installation
 
@@ -254,6 +252,8 @@ document.addEventListener("WebComponentsReady", function () {
 
     var viewer = document.getElementById('view1');
     viewer.load(data);
+
+    viewer.update([{'x': 5, 'y': 'e', 'z': true}]);
 
 });
 ```
